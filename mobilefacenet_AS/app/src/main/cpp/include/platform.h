@@ -19,5 +19,10 @@
 #define NCNN_STRING 1
 #define NCNN_OPENCV 0
 #define NCNN_BENCHMARK 0
+#define NCNN_PIXEL 1
+#define NCNN_PIXEL_ROTATE 0
+#define NCNN_VULKAN 0
+#define NCNN_REQUANT 0
+#define NCNN_IM2COL_SGEMM 0
 
 #endif // NCNN_PLATFORM_H
