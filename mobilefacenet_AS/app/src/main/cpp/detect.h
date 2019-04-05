@@ -68,7 +68,7 @@ namespace Face {
 
     private://部分可调参数
         const float threshold[3] = { 0.8f, 0.8f, 0.6f };
-        int minsize = 40;
+        int minsize = 40;       // 最小人脸默认为40，有利于速度提升
         const float pre_facetor = 0.709f;
 
         int count = 1;          // 检测迭代次数

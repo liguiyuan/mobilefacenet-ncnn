@@ -38,20 +38,18 @@ import static android.content.ContentValues.TAG;
 public class MainActivity extends Activity {
     private static final int SELECT_IMAGE1 = 1, SELECT_IMAGE2 = 2;
 
-    //private TextView infoResult;
     private ImageView imageView1, imageView2;
     private Bitmap yourSelectedImage1 = null, yourSelectedImage2 = null;
     private Bitmap faceImage1 = null, faceImage2 = null;
     TextView faceInfo1, faceInfo2, cmpResult;   //显示face 检测的结果和compare的结果
-    /***
-    AppCompatEditText etMinFaceSize,etTestTimeCount,etThreadsNumber;
+
+    // 初始参数设置，可以按需修改
     private int minFaceSize = 40;
-    private int testTimeCount = 10;
+    private int testTimeCount = 1;
     private int threadsNumber = 4;
 
-    private boolean maxFaceSetting = false;
-     ***/
     private Face mFace = new Face();
+
     /**
      * ATTENTION: This was auto-generated to implement the App Indexing API.
      * See https://g.co/AppIndexing/AndroidStudio for more information.
@@ -105,29 +103,11 @@ public class MainActivity extends Activity {
         String sdPath = sdDir.toString() + "/facem/";
         mFace.FaceDetectionModelInit(sdPath);
 
-        //最大人脸设置
-        /***
-        etMinFaceSize = (AppCompatEditText) findViewById(R.id.etMinFaceSize);
-        etTestTimeCount = (AppCompatEditText) findViewById(R.id.etTestTimeCount);
-        etThreadsNumber = (AppCompatEditText) findViewById(R.id.etThreadsNumber);
-
-        ToggleButton mToggleBt = (ToggleButton) findViewById(R.id.toggle_bt);
-        mToggleBt.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView,
-                                         boolean isChecked) {
-                if (isChecked) {
-                    Toast.makeText(getApplication(), "打开只检测最大人脸功能", Toast.LENGTH_SHORT)
-                            .show();
-                    maxFaceSetting = true;
-                } else {
-                    Toast.makeText(getApplication(), "关闭只检测最大人脸功能", Toast.LENGTH_SHORT)
-                            .show();
-                    maxFaceSetting = false;
-                }
-            }
-        });
-        ***/
+        // 多线程设置
+        Log.i(TAG, "最小人脸："+minFaceSize);
+        mFace.SetMinFaceSize(minFaceSize);
+        mFace.SetTimeCount(testTimeCount);
+        mFace.SetThreadsNumber(threadsNumber);
 
         //左边的图片
         imageView1 = (ImageView) findViewById(R.id.imageView1);
@@ -148,33 +128,14 @@ public class MainActivity extends Activity {
              public void onClick(View arg0) {
                  if (yourSelectedImage1 == null)
                      return;
+
+                 //人脸检测
                  faceImage1 = null;
-
-                 /***
-                  * 多线程设置
-                  minFaceSize = Integer.valueOf(TextUtils.isEmpty(etMinFaceSize.getText().toString()) ? "40" : etMinFaceSize.getText().toString());
-                  testTimeCount = Integer.valueOf(TextUtils.isEmpty(etTestTimeCount.getText().toString()) ? "10" : etTestTimeCount.getText().toString());
-                  threadsNumber = Integer.valueOf(TextUtils.isEmpty(etThreadsNumber.getText().toString()) ? "4" : etThreadsNumber.getText().toString());
-
-                  if (threadsNumber != 1&&threadsNumber != 2&&threadsNumber != 4&&threadsNumber != 8){
-                      Log.i(TAG, "线程数："+threadsNumber);
-                      infoResult.setText("线程数必须是（1，2，4，8）之一");
-                      return;
-                  }
-
-                  Log.i(TAG, "最小人脸："+minFaceSize);
-                  mtcnn.SetMinFaceSize(minFaceSize);
-                  mtcnn.SetTimeCount(testTimeCount);
-                  mtcnn.SetThreadsNumber(threadsNumber);
-                  ***/
-
-                 //检测流程
                  int width = yourSelectedImage1.getWidth();
                  int height = yourSelectedImage1.getHeight();
                  byte[] imageDate = getPixelsRGBA(yourSelectedImage1);
 
                  long timeDetectFace = System.currentTimeMillis();   //检测起始时间
-
                  int faceInfo[] = mFace.FaceDetect(imageDate, width, height, 4);
                  timeDetectFace = System.currentTimeMillis() - timeDetectFace; //人脸检测时间
 
@@ -205,7 +166,6 @@ public class MainActivity extends Activity {
                      }
                      imageView1.setImageBitmap(drawBitmap);
                      faceImage1 = Bitmap.createBitmap(yourSelectedImage1, faceInfo[1], faceInfo[2], faceInfo[3] - faceInfo[1], faceInfo[4] - faceInfo[2]);
-
                  } else {     //没有人脸
                      faceInfo1.setText("no face");
                  }
@@ -231,6 +191,7 @@ public class MainActivity extends Activity {
             public void onClick(View arg0) {
                 if (yourSelectedImage2 == null)
                     return;
+
                 //人脸检测
                 faceImage2 = null;
                 int width = yourSelectedImage2.getWidth();
@@ -240,6 +201,7 @@ public class MainActivity extends Activity {
                 long timeDetectFace = System.currentTimeMillis();
                 int faceInfo[] = mFace.FaceDetect(imageDate, width, height, 4);
                 timeDetectFace = System.currentTimeMillis() - timeDetectFace;
+
                 if (faceInfo.length > 1) {
                     faceInfo2.setText("pic2 detect time:" + timeDetectFace);
                     int faceNum = faceInfo[0];
@@ -271,10 +233,8 @@ public class MainActivity extends Activity {
                 } else {
                     faceInfo2.setText("no face");
                 }
-
             }
         });
-
 
         //人脸识别(compare)
         cmpResult = (TextView) findViewById(R.id.textView1);
@@ -296,7 +256,6 @@ public class MainActivity extends Activity {
                 cmpResult.setText("cosin:" + similar + "\n" + "cmp time:" + timeRecognizeFace);
             }
         });
-
     }
 
     @Override
@@ -305,7 +264,6 @@ public class MainActivity extends Activity {
 
         if (resultCode == RESULT_OK && null != data) {
             Uri selectedImage = data.getData();
-
             try {
                 if (requestCode == SELECT_IMAGE1) {
                     Bitmap bitmap = decodeUri(selectedImage);
@@ -397,6 +355,5 @@ public class MainActivity extends Activity {
         myInput.close();
         myOutput.close();
         Log.i(TAG, "end copy file " + strOutFileName);
-
     }
 }
