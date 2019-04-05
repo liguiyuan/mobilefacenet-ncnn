@@ -36,25 +36,27 @@ import java.nio.ByteBuffer;
 import static android.content.ContentValues.TAG;
 
 public class MainActivity extends Activity {
-    private static final int SELECT_IMAGE = 1;
+    private static final int SELECT_IMAGE1 = 1, SELECT_IMAGE2 = 2;
 
-    private TextView infoResult;
-    private ImageView imageView;
-    private Bitmap yourSelectedImage = null;
-
+    //private TextView infoResult;
+    private ImageView imageView1, imageView2;
+    private Bitmap yourSelectedImage1 = null, yourSelectedImage2 = null;
+    private Bitmap faceImage1 = null, faceImage2 = null;
+    TextView faceInfo1, faceInfo2, cmpResult;   //显示face 检测的结果和compare的结果
+    /***
     AppCompatEditText etMinFaceSize,etTestTimeCount,etThreadsNumber;
     private int minFaceSize = 40;
     private int testTimeCount = 10;
     private int threadsNumber = 4;
 
     private boolean maxFaceSetting = false;
-
-    private MTCNN mtcnn = new MTCNN();
+     ***/
+    private Face mFace = new Face();
     /**
      * ATTENTION: This was auto-generated to implement the App Indexing API.
      * See https://g.co/AppIndexing/AndroidStudio for more information.
      */
-    private GoogleApiClient client;
+    //private GoogleApiClient client;
 
     private static final int REQUEST_EXTERNAL_STORAGE = 1;
     private static String[] PERMISSIONS_STORAGE = {
@@ -93,17 +95,18 @@ public class MainActivity extends Activity {
             copyBigDataToSD("det1.param");
             copyBigDataToSD("det2.param");
             copyBigDataToSD("det3.param");
+            copyBigDataToSD("mobilefacenet.bin");
+            copyBigDataToSD("mobilefacenet.param");
         } catch (IOException e) {
             e.printStackTrace();
         }
         //模型初始化
         File sdDir = Environment.getExternalStorageDirectory();//获取跟目录
-        String sdPath = sdDir.toString() + "/mtcnn/";
-        mtcnn.FaceDetectionModelInit(sdPath);
+        String sdPath = sdDir.toString() + "/facem/";
+        mFace.FaceDetectionModelInit(sdPath);
 
-        infoResult = (TextView) findViewById(R.id.infoResult);
-        imageView = (ImageView) findViewById(R.id.imageView);
-
+        //最大人脸设置
+        /***
         etMinFaceSize = (AppCompatEditText) findViewById(R.id.etMinFaceSize);
         etTestTimeCount = (AppCompatEditText) findViewById(R.id.etTestTimeCount);
         etThreadsNumber = (AppCompatEditText) findViewById(R.id.etThreadsNumber);
@@ -124,94 +127,177 @@ public class MainActivity extends Activity {
                 }
             }
         });
+        ***/
 
-        Button buttonImage = (Button) findViewById(R.id.buttonImage);
-        buttonImage.setOnClickListener(new View.OnClickListener() {
+        //左边的图片
+        imageView1 = (ImageView) findViewById(R.id.imageView1);
+        faceInfo1 = (TextView)findViewById(R.id.faceInfo1);
+        Button buttonImage1 = (Button) findViewById(R.id.select1);
+        buttonImage1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View arg0) {
                 Intent i = new Intent(Intent.ACTION_PICK);
                 i.setType("image/*");
-                startActivityForResult(i, SELECT_IMAGE);
+                startActivityForResult(i, SELECT_IMAGE1);
             }
         });
+        //第一张图片人脸检测
+        Button buttonDetect1 = (Button) findViewById(R.id.detect1);
+        buttonDetect1.setOnClickListener(new View.OnClickListener() {
+             @Override
+             public void onClick(View arg0) {
+                 if (yourSelectedImage1 == null)
+                     return;
+                 faceImage1 = null;
 
-        Button buttonDetect = (Button) findViewById(R.id.buttonDetect);
-        buttonDetect.setOnClickListener(new View.OnClickListener() {
+                 /***
+                  * 多线程设置
+                  minFaceSize = Integer.valueOf(TextUtils.isEmpty(etMinFaceSize.getText().toString()) ? "40" : etMinFaceSize.getText().toString());
+                  testTimeCount = Integer.valueOf(TextUtils.isEmpty(etTestTimeCount.getText().toString()) ? "10" : etTestTimeCount.getText().toString());
+                  threadsNumber = Integer.valueOf(TextUtils.isEmpty(etThreadsNumber.getText().toString()) ? "4" : etThreadsNumber.getText().toString());
+
+                  if (threadsNumber != 1&&threadsNumber != 2&&threadsNumber != 4&&threadsNumber != 8){
+                      Log.i(TAG, "线程数："+threadsNumber);
+                      infoResult.setText("线程数必须是（1，2，4，8）之一");
+                      return;
+                  }
+
+                  Log.i(TAG, "最小人脸："+minFaceSize);
+                  mtcnn.SetMinFaceSize(minFaceSize);
+                  mtcnn.SetTimeCount(testTimeCount);
+                  mtcnn.SetThreadsNumber(threadsNumber);
+                  ***/
+
+                 //检测流程
+                 int width = yourSelectedImage1.getWidth();
+                 int height = yourSelectedImage1.getHeight();
+                 byte[] imageDate = getPixelsRGBA(yourSelectedImage1);
+
+                 long timeDetectFace = System.currentTimeMillis();   //检测起始时间
+
+                 int faceInfo[] = mFace.FaceDetect(imageDate, width, height, 4);
+                 timeDetectFace = System.currentTimeMillis() - timeDetectFace; //人脸检测时间
+
+                 if (faceInfo.length > 1) {       //检测到人脸
+                     faceInfo1.setText("pic1 detect time:" + timeDetectFace);
+                     int faceNum = faceInfo[0];
+                     Log.i(TAG, "pic width：" + width + "height：" + height + " face num：" + faceNum);
+                     Bitmap drawBitmap = yourSelectedImage1.copy(Bitmap.Config.ARGB_8888, true);
+                     for (int i = 0; i < faceInfo[0]; i++) {     //画出人脸识别框
+                         int left, top, right, bottom;
+                         Canvas canvas = new Canvas(drawBitmap);
+                         Paint paint = new Paint();
+                         left = faceInfo[1 + 14 * i];
+                         top = faceInfo[2 + 14 * i];
+                         right = faceInfo[3 + 14 * i];
+                         bottom = faceInfo[4 + 14 * i];
+                         paint.setColor(Color.BLUE);
+                         paint.setStyle(Paint.Style.STROKE);//不填充
+                         paint.setStrokeWidth(5);  //线的宽度
+                         canvas.drawRect(left, top, right, bottom, paint);
+
+                         //画特征点
+                         canvas.drawPoints(new float[]{faceInfo[5+14*i],faceInfo[10+14*i],
+                         faceInfo[6+14*i],faceInfo[11+14*i],
+                         faceInfo[7+14*i],faceInfo[12+14*i],
+                         faceInfo[8+14*i],faceInfo[13+14*i],
+                         faceInfo[9+14*i],faceInfo[14+14*i]}, paint);//画多个点
+                     }
+                     imageView1.setImageBitmap(drawBitmap);
+                     faceImage1 = Bitmap.createBitmap(yourSelectedImage1, faceInfo[1], faceInfo[2], faceInfo[3] - faceInfo[1], faceInfo[4] - faceInfo[2]);
+
+                 } else {     //没有人脸
+                     faceInfo1.setText("no face");
+                 }
+             }
+        });
+
+        //右边的图片
+        imageView2 = (ImageView) findViewById(R.id.imageView2);
+        faceInfo2 = (TextView) findViewById(R.id.faceInfo2);
+        Button buttonImage2 = (Button) findViewById(R.id.select2);
+        buttonImage2.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View arg0) {
-                if (yourSelectedImage == null)
+                Intent i = new Intent(Intent.ACTION_PICK);
+                i.setType("image/*");
+                startActivityForResult(i, SELECT_IMAGE2);
+            }
+        });
+
+        Button buttonDetect2 = (Button) findViewById(R.id.detect2);
+        buttonDetect2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View arg0) {
+                if (yourSelectedImage2 == null)
                     return;
+                //人脸检测
+                faceImage2 = null;
+                int width = yourSelectedImage2.getWidth();
+                int height = yourSelectedImage2.getHeight();
+                byte[] imageDate = getPixelsRGBA(yourSelectedImage2);
 
-                minFaceSize = Integer.valueOf(TextUtils.isEmpty(etMinFaceSize.getText().toString()) ? "40" : etMinFaceSize.getText().toString());
-                testTimeCount = Integer.valueOf(TextUtils.isEmpty(etTestTimeCount.getText().toString()) ? "10" : etTestTimeCount.getText().toString());
-                threadsNumber = Integer.valueOf(TextUtils.isEmpty(etThreadsNumber.getText().toString()) ? "4" : etThreadsNumber.getText().toString());
+                long timeDetectFace = System.currentTimeMillis();
+                int faceInfo[] = mFace.FaceDetect(imageDate, width, height, 4);
+                timeDetectFace = System.currentTimeMillis() - timeDetectFace;
+                if (faceInfo.length > 1) {
+                    faceInfo2.setText("pic2 detect time:" + timeDetectFace);
+                    int faceNum = faceInfo[0];
+                    Log.i(TAG, "pic width：" + width + "height：" + height + " face num：" + faceNum);
+                    Bitmap drawBitmap = yourSelectedImage2.copy(Bitmap.Config.ARGB_8888, true);
 
-                if (threadsNumber != 1&&threadsNumber != 2&&threadsNumber != 4&&threadsNumber != 8){
-                    Log.i(TAG, "线程数："+threadsNumber);
-                    infoResult.setText("线程数必须是（1，2，4，8）之一");
-                    return;
+                    for (int i = 0; i < faceInfo[0]; i++) {    //画出人脸识别框
+                        int left, top, right, bottom;
+                        Canvas canvas = new Canvas(drawBitmap);
+                        Paint paint = new Paint();
+                        left = faceInfo[1 + 14 * i];
+                        top = faceInfo[2 + 14 * i];
+                        right = faceInfo[3 + 14 * i];
+                        bottom = faceInfo[4 + 14 * i];
+                        paint.setColor(Color.GREEN);
+                        paint.setStyle(Paint.Style.STROKE);     //不填充
+                        paint.setStrokeWidth(5);                //线的宽度
+                        canvas.drawRect(left, top, right, bottom, paint);
+
+                        //画特征点
+                        canvas.drawPoints(new float[]{faceInfo[5+14*i],faceInfo[10+14*i],
+                        faceInfo[6+14*i],faceInfo[11+14*i],
+                        faceInfo[7+14*i],faceInfo[12+14*i],
+                        faceInfo[8+14*i],faceInfo[13+14*i],
+                        faceInfo[9+14*i],faceInfo[14+14*i]}, paint);//画多个点
+                    }
+                    imageView2.setImageBitmap(drawBitmap);
+                    faceImage2 = Bitmap.createBitmap(yourSelectedImage2, faceInfo[1], faceInfo[2], faceInfo[3] - faceInfo[1], faceInfo[4] - faceInfo[2]);
+                } else {
+                    faceInfo2.setText("no face");
                 }
-
-                Log.i(TAG, "最小人脸："+minFaceSize);
-                mtcnn.SetMinFaceSize(minFaceSize);
-                mtcnn.SetTimeCount(testTimeCount);
-                mtcnn.SetThreadsNumber(threadsNumber);
-
-                //检测流程
-                int width = yourSelectedImage.getWidth();
-                int height = yourSelectedImage.getHeight();
-                byte[] imageDate = getPixelsRGBA(yourSelectedImage);
-
-                long timeDetectFace = System.currentTimeMillis();   //检测起始时间
-                int faceInfo[] = null;
-                if(!maxFaceSetting) {
-                    faceInfo = mtcnn.FaceDetect(imageDate, width, height, 4);
-                    Log.i(TAG, "检测所有人脸");
-                }
-                else{
-                    faceInfo = mtcnn.MaxFaceDetect(imageDate, width, height, 4);
-                    Log.i(TAG, "检测最大人脸");
-                }
-                timeDetectFace = System.currentTimeMillis() - timeDetectFace;   //检测结束时间
-                Log.i(TAG, "人脸平均检测时间："+timeDetectFace/testTimeCount);
-
-               if(faceInfo.length>1){
-                   int faceNum = faceInfo[0];
-                   infoResult.setText("图宽："+width+"高："+height+"人脸平均检测时间："+timeDetectFace/testTimeCount+" 数目：" + faceNum);
-                   Log.i(TAG, "图宽："+width+"高："+height+" 人脸数目：" + faceNum );
-
-                   Bitmap drawBitmap = yourSelectedImage.copy(Bitmap.Config.ARGB_8888, true);
-                   for(int i=0;i<faceNum;i++) {
-                       int left, top, right, bottom;
-                       Canvas canvas = new Canvas(drawBitmap);
-                       Paint paint = new Paint();
-                       left = faceInfo[1+14*i];
-                       top = faceInfo[2+14*i];
-                       right = faceInfo[3+14*i];
-                       bottom = faceInfo[4+14*i];
-                       paint.setColor(Color.RED);
-                       paint.setStyle(Paint.Style.STROKE);//不填充
-                       paint.setStrokeWidth(5);  //线的宽度
-                       canvas.drawRect(left, top, right, bottom, paint);
-                       //画特征点
-                       canvas.drawPoints(new float[]{faceInfo[5+14*i],faceInfo[10+14*i],
-                                                     faceInfo[6+14*i],faceInfo[11+14*i],
-                                                     faceInfo[7+14*i],faceInfo[12+14*i],
-                                                     faceInfo[8+14*i],faceInfo[13+14*i],
-                                                     faceInfo[9+14*i],faceInfo[14+14*i]}, paint);//画多个点
-                   }
-                   imageView.setImageBitmap(drawBitmap);
-                }else{
-                   infoResult.setText("未检测到人脸");
-               }
 
             }
         });
-        // ATTENTION: This was auto-generated to implement the App Indexing API.
-        // See https://g.co/AppIndexing/AndroidStudio for more information.
-        client = new GoogleApiClient.Builder(this).addApi(AppIndex.API).build();
-    }
 
+
+        //人脸识别(compare)
+        cmpResult = (TextView) findViewById(R.id.textView1);
+        Button cmpImage = (Button) findViewById(R.id.facecmp);
+        cmpImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View arg0) {
+                if (faceImage1 == null || faceImage2 == null) { //检测的人脸图片为空
+                    cmpResult.setText("no enough face,return");
+                    return;
+                }
+
+                byte[] faceDate1 = getPixelsRGBA(faceImage1);
+                byte[] faceDate2 = getPixelsRGBA(faceImage2);
+                long timeRecognizeFace = System.currentTimeMillis();
+                double similar = mFace.FaceRecognize(faceDate1,faceImage1.getWidth(),faceImage1.getHeight(),
+                        faceDate2,faceImage2.getWidth(),faceImage2.getHeight());
+                timeRecognizeFace = System.currentTimeMillis() - timeRecognizeFace;
+                cmpResult.setText("cosin:" + similar + "\n" + "cmp time:" + timeRecognizeFace);
+            }
+        });
+
+    }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -221,16 +307,22 @@ public class MainActivity extends Activity {
             Uri selectedImage = data.getData();
 
             try {
-                if (requestCode == SELECT_IMAGE) {
+                if (requestCode == SELECT_IMAGE1) {
                     Bitmap bitmap = decodeUri(selectedImage);
 
                     Bitmap rgba = bitmap.copy(Bitmap.Config.ARGB_8888, true);
 
                     // resize to 227x227
-                    //yourSelectedImage = Bitmap.createScaledBitmap(rgba, 227, 227, false);
-                    yourSelectedImage = rgba;
+                    //yourSelectedImage1 = Bitmap.createScaledBitmap(rgba, 227, 227, false);
+                    yourSelectedImage1 = rgba;
 
-                    imageView.setImageBitmap(yourSelectedImage);
+                    imageView1.setImageBitmap(yourSelectedImage1);
+                }
+                else if (requestCode == SELECT_IMAGE2) {
+                    Bitmap bitmap = decodeUri(selectedImage);
+                    Bitmap rgba = bitmap.copy(Bitmap.Config.ARGB_8888, true);
+                    yourSelectedImage2 = rgba;
+                    imageView2.setImageBitmap(yourSelectedImage2);
                 }
             } catch (FileNotFoundException e) {
                 Log.e("MainActivity", "FileNotFoundException");
@@ -281,19 +373,19 @@ public class MainActivity extends Activity {
     private void copyBigDataToSD(String strOutFileName) throws IOException {
         Log.i(TAG, "start copy file " + strOutFileName);
         File sdDir = Environment.getExternalStorageDirectory();//获取跟目录
-        File file = new File(sdDir.toString()+"/mtcnn/");
+        File file = new File(sdDir.toString()+"/facem/");
         if (!file.exists()) {
             file.mkdir();
         }
 
-        String tmpFile = sdDir.toString()+"/mtcnn/" + strOutFileName;
+        String tmpFile = sdDir.toString()+"/facem/" + strOutFileName;
         File f = new File(tmpFile);
         if (f.exists()) {
             Log.i(TAG, "file exists " + strOutFileName);
             return;
         }
         InputStream myInput;
-        java.io.OutputStream myOutput = new FileOutputStream(sdDir.toString()+"/mtcnn/"+ strOutFileName);
+        java.io.OutputStream myOutput = new FileOutputStream(sdDir.toString()+"/facem/"+ strOutFileName);
         myInput = this.getAssets().open(strOutFileName);
         byte[] buffer = new byte[1024];
         int length = myInput.read(buffer);

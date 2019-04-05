@@ -4,7 +4,7 @@ package com.mtcnn_as;
  * Created by hasee on 2017/12/19.
  */
 
-public class MTCNN{
+public class Face {
     //人脸检测模型导入
     public native boolean FaceDetectionModelInit(String faceDetectionModelPath);
 
@@ -25,7 +25,10 @@ public class MTCNN{
     //循环测试次数
     public native boolean SetTimeCount(int timeCount);
 
+    //人脸识别
+    public native double FaceRecognize(byte[] faceDate1,int w1,int h1,byte[] faceDate2,int w2,int h2);
+
     static {
-        System.loadLibrary("mtcnn");
+        System.loadLibrary("Face");
     }
 }

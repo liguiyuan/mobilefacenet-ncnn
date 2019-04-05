@@ -5,9 +5,9 @@ include_directories(src/main/cpp/include
                     src/main/cpp/)
 
 #source directory源文件目录
-file(GLOB MTCNN_SRC src/main/cpp/*.h
+file(GLOB FACE_SRC src/main/cpp/*.h
                     src/main/cpp/*.cpp)
-set(MTCNN_COMPILE_CODE ${MTCNN_SRC})
+set(FACE_COMPILE_CODE ${FACE_SRC})
 
 
 #添加ncnn库
@@ -17,11 +17,11 @@ set_target_properties(libncnn
   ${CMAKE_SOURCE_DIR}/src/main/jniLibs/${ANDROID_ABI}/libncnn.a)
 
 #编译为动态库
-add_library(mtcnn SHARED ${MTCNN_COMPILE_CODE})
+add_library(Face SHARED ${FACE_COMPILE_CODE})
 
 #添加工程所依赖的库
 find_library(  log-lib log )
-target_link_libraries(  mtcnn
+target_link_libraries( Face
                        libncnn
                        jnigraphics
                        z

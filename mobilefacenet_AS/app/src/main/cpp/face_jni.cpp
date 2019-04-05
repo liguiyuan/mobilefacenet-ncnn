@@ -3,15 +3,19 @@
 #include <jni.h>
 #include <string>
 #include <vector>
+#include <cstring>
 
 // ncnn
 #include "net.h"
+#include "recognize.h"
+#include "detect.h"
 
-#include "mtcnn.h"
-using namespace std;
+using namespace Face;
+
 #define TAG "MtcnnSo"
 #define LOGD(...) __android_log_print(ANDROID_LOG_DEBUG,TAG,__VA_ARGS__)
-static MTCNN *mtcnn;
+static Detect *mDetect;
+static Recognize *mRecognize;
 
 //sdk是否初始化成功
 bool detection_sdk_init_ok = false;
@@ -20,7 +24,7 @@ bool detection_sdk_init_ok = false;
 extern "C" {
 
 JNIEXPORT jboolean JNICALL
-Java_com_mtcnn_1as_MTCNN_FaceDetectionModelInit(JNIEnv *env, jobject instance,
+Java_com_mtcnn_1as_Face_FaceDetectionModelInit(JNIEnv *env, jobject instance,
                                                 jstring faceDetectionModelPath_) {
      LOGD("JNI开始人脸检测模型初始化");
     //如果已初始化则直接返回
@@ -52,8 +56,11 @@ Java_com_mtcnn_1as_MTCNN_FaceDetectionModelInit(JNIEnv *env, jobject instance,
     LOGD("init, tFaceModelDir=%s", tFaceModelDir.c_str());
 
     //没判断是否正确导入，懒得改了
-    mtcnn = new MTCNN(tFaceModelDir);
-    mtcnn->SetMinFace(40);
+    mDetect = new Detect(tFaceModelDir);
+    mRecognize = new Recognize(tFaceModelDir);
+    mDetect->SetMinFace(40);
+    mDetect->SetNumThreads(2);    // 2线程
+    mRecognize->SetThreadNum(2);
 
     env->ReleaseStringUTFChars(faceDetectionModelPath_, faceDetectionModelPath);
     detection_sdk_init_ok = true;
@@ -62,7 +69,7 @@ Java_com_mtcnn_1as_MTCNN_FaceDetectionModelInit(JNIEnv *env, jobject instance,
 }
 
 JNIEXPORT jintArray JNICALL
-Java_com_mtcnn_1as_MTCNN_FaceDetect(JNIEnv *env, jobject instance, jbyteArray imageDate_,
+Java_com_mtcnn_1as_Face_FaceDetect(JNIEnv *env, jobject instance, jbyteArray imageDate_,
                                     jint imageWidth, jint imageHeight, jint imageChannel) {
     //  LOGD("JNI开始检测人脸");
     if(!detection_sdk_init_ok){
@@ -114,7 +121,7 @@ Java_com_mtcnn_1as_MTCNN_FaceDetect(JNIEnv *env, jobject instance, jbyteArray im
     }
 
     std::vector<Bbox> finalBbox;
-    mtcnn->detect(ncnn_img, finalBbox);
+    mDetect->detect(ncnn_img, finalBbox);
 
     int32_t num_face = static_cast<int32_t>(finalBbox.size());
     LOGD("检测到的人脸数目：%d\n", num_face);
@@ -142,7 +149,7 @@ Java_com_mtcnn_1as_MTCNN_FaceDetect(JNIEnv *env, jobject instance, jbyteArray im
 }
 
 JNIEXPORT jintArray JNICALL
-Java_com_mtcnn_1as_MTCNN_MaxFaceDetect(JNIEnv *env, jobject instance, jbyteArray imageDate_,
+Java_com_mtcnn_1as_Face_MaxFaceDetect(JNIEnv *env, jobject instance, jbyteArray imageDate_,
                                        jint imageWidth, jint imageHeight, jint imageChannel) {
     //  LOGD("JNI开始检测人脸");
     if(!detection_sdk_init_ok){
@@ -194,7 +201,7 @@ Java_com_mtcnn_1as_MTCNN_MaxFaceDetect(JNIEnv *env, jobject instance, jbyteArray
     }
 
     std::vector<Bbox> finalBbox;
-    mtcnn->detectMaxFace(ncnn_img, finalBbox);
+    mDetect->detectMaxFace(ncnn_img, finalBbox);
 
     int32_t num_face = static_cast<int32_t>(finalBbox.size());
     LOGD("检测到的人脸数目：%d\n", num_face);
@@ -223,13 +230,13 @@ Java_com_mtcnn_1as_MTCNN_MaxFaceDetect(JNIEnv *env, jobject instance, jbyteArray
 
 
 JNIEXPORT jboolean JNICALL
-Java_com_mtcnn_1as_MTCNN_FaceDetectionModelUnInit(JNIEnv *env, jobject instance) {
+Java_com_mtcnn_1as_Face_FaceDetectionModelUnInit(JNIEnv *env, jobject instance) {
     if(!detection_sdk_init_ok){
         LOGD("人脸检测MTCNN模型已经释放过或者未初始化");
         return true;
     }
     jboolean tDetectionUnInit = false;
-    delete mtcnn;
+    delete mDetect;
 
 
     detection_sdk_init_ok=false;
@@ -241,7 +248,7 @@ Java_com_mtcnn_1as_MTCNN_FaceDetectionModelUnInit(JNIEnv *env, jobject instance)
 
 
 JNIEXPORT jboolean JNICALL
-Java_com_mtcnn_1as_MTCNN_SetMinFaceSize(JNIEnv *env, jobject instance, jint minSize) {
+Java_com_mtcnn_1as_Face_SetMinFaceSize(JNIEnv *env, jobject instance, jint minSize) {
     if(!detection_sdk_init_ok){
         LOGD("人脸检测MTCNN模型SDK未初始化，直接返回");
         return false;
@@ -251,13 +258,13 @@ Java_com_mtcnn_1as_MTCNN_SetMinFaceSize(JNIEnv *env, jobject instance, jint minS
         minSize=20;
     }
 
-    mtcnn->SetMinFace(minSize);
+    mDetect->SetMinFace(minSize);
     return true;
 }
 
 
 JNIEXPORT jboolean JNICALL
-Java_com_mtcnn_1as_MTCNN_SetThreadsNumber(JNIEnv *env, jobject instance, jint threadsNumber) {
+Java_com_mtcnn_1as_Face_SetThreadsNumber(JNIEnv *env, jobject instance, jint threadsNumber) {
     if(!detection_sdk_init_ok){
         LOGD("人脸检测MTCNN模型SDK未初始化，直接返回");
         return false;
@@ -268,23 +275,51 @@ Java_com_mtcnn_1as_MTCNN_SetThreadsNumber(JNIEnv *env, jobject instance, jint th
         return false;
     }
 
-    mtcnn->SetNumThreads(threadsNumber);
+    mDetect->SetNumThreads(threadsNumber);
     return  true;
 }
 
 
 JNIEXPORT jboolean JNICALL
-Java_com_mtcnn_1as_MTCNN_SetTimeCount(JNIEnv *env, jobject instance, jint timeCount) {
+Java_com_mtcnn_1as_Face_SetTimeCount(JNIEnv *env, jobject instance, jint timeCount) {
 
     if(!detection_sdk_init_ok){
         LOGD("人脸检测MTCNN模型SDK未初始化，直接返回");
         return false;
     }
 
-    mtcnn->SetTimeCount(timeCount);
+    mDetect->SetTimeCount(timeCount);
     return true;
 
 }
+}
 
+extern "C"
+JNIEXPORT jdouble JNICALL
+Java_com_mtcnn_1as_Face_FaceRecognize(JNIEnv *env, jobject instance,
+                                       jbyteArray faceDate1_, jint w1, jint h1,
+                                       jbyteArray faceDate2_, jint w2, jint h2) {
+    jbyte *faceDate1 = env->GetByteArrayElements(faceDate1_, NULL);
+    jbyte *faceDate2 = env->GetByteArrayElements(faceDate2_, NULL);
 
+    // TODO
+    double similar = 0;
+    unsigned char *faceImageCharDate1 = (unsigned char *) faceDate1;
+    unsigned char *faceImageCharDate2 = (unsigned char *) faceDate2;
+
+    //没进行对齐操作，且以下对图像缩放的操作方法对结果影响较大。可改进空间很大，有能力的自己改改
+    ncnn::Mat ncnn_img1 = ncnn::Mat::from_pixels_resize(faceImageCharDate1,
+                                                        ncnn::Mat::PIXEL_RGBA2RGB, w1, h1, 112,
+                                                        112);
+    ncnn::Mat ncnn_img2 = ncnn::Mat::from_pixels_resize(faceImageCharDate2,
+                                                        ncnn::Mat::PIXEL_RGBA2RGB, w2, h2, 112,
+                                                        112);
+    std::vector<float> feature1, feature2;
+    mRecognize->start(ncnn_img1, feature1);
+    mRecognize->start(ncnn_img2, feature2);
+
+    env->ReleaseByteArrayElements(faceDate1_, faceDate1, 0);
+    env->ReleaseByteArrayElements(faceDate2_, faceDate2, 0);
+    similar = calculSimilar(feature1, feature2);
+    return similar;
 }
