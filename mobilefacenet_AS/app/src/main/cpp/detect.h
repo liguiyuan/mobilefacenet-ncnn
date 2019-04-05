@@ -71,8 +71,8 @@ namespace Face {
         int minsize = 40;
         const float pre_facetor = 0.709f;
 
-        int count = 10;
-        int num_threads = 4;
+        int count = 1;          // 检测迭代次数
+        int num_threads = 4;    // 使用4线程
     };
 
     bool cmpScore(Bbox lsh, Bbox rsh);
