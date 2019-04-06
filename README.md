@@ -93,19 +93,9 @@ I/ContentValues: 检测所有人脸
 I/ContentValues: 图宽：816高：612 人脸数目：13
 ```
 
-[https://github.com/liguiyuan/mobilefacenet-ncnn/tree/master/docs/face_detect.jpg](https://github.com/liguiyuan/mobilefacenet-ncnn/tree/master/docs/face_detect.jpg)
+
 
 人脸识别，通过多次的优化后，速度有较大提高，第一次检测时间大概70到80ms之间。
 
-[https://github.com/liguiyuan/mobilefacenet-ncnn/tree/master/docs/face_recognize.jpg](https://github.com/liguiyuan/mobilefacenet-ncnn/tree/master/docs/face_recognize.jpg)
-
-
-
-
-
-
-
-
-
-
+![](https://github.com/liguiyuan/mobilefacenet-ncnn/blob/master/docs/face_recognize.jpg)
 
