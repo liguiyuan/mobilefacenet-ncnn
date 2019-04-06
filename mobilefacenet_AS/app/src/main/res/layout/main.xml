@@ -33,14 +33,14 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="select 1" />
+                        android:text="选图 1" />
 
                     <Button
                         android:id="@+id/detect1"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="detect 1" />
+                        android:text="检测 1" />
 
                 </LinearLayout>
 
@@ -76,14 +76,14 @@
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="select 2" />
+                        android:text="选图 2" />
 
                     <Button
                         android:id="@+id/detect2"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
-                        android:text="detect 2" />
+                        android:text="检测 2" />
                 </LinearLayout>
 
                 <TextView
@@ -120,7 +120,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
-                    android:text="cmp" />
+                    android:text="对比" />
 
                 <TextView
                     android:id="@+id/textView1"
