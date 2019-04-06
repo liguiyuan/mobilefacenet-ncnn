@@ -72,7 +72,7 @@ namespace Face {
         const float pre_facetor = 0.709f;
 
         int count = 1;          // 检测迭代次数
-        int num_threads = 4;    // 使用4线程
+        int num_threads = 2;    // 使用线程
     };
 
     bool cmpScore(Bbox lsh, Bbox rsh);

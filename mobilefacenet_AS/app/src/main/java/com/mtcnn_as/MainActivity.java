@@ -36,8 +36,8 @@ import java.nio.ByteBuffer;
 import static android.content.ContentValues.TAG;
 
 public class MainActivity extends Activity {
-    private static final int SELECT_IMAGE1 = 1, SELECT_IMAGE2 = 2;
 
+    private static final int SELECT_IMAGE1 = 1, SELECT_IMAGE2 = 2;
     private ImageView imageView1, imageView2;
     private Bitmap yourSelectedImage1 = null, yourSelectedImage2 = null;
     private Bitmap faceImage1 = null, faceImage2 = null;
@@ -46,7 +46,7 @@ public class MainActivity extends Activity {
     // 初始参数设置，可以按需修改
     private int minFaceSize = 40;
     private int testTimeCount = 1;
-    private int threadsNumber = 4;
+    private int threadsNumber = 2;
 
     private Face mFace = new Face();
 
@@ -63,7 +63,6 @@ public class MainActivity extends Activity {
 
 
     public static void verifyStoragePermissions(Activity activity) {
-
         try {
             //检测是否有写的权限
             int permission = ActivityCompat.checkSelfPermission(activity,
