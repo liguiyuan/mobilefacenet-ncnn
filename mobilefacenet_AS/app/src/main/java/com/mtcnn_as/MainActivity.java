@@ -12,19 +12,11 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.support.v4.app.ActivityCompat;
-import android.support.v7.widget.AppCompatEditText;
-import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
-import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
-import android.widget.ToggleButton;
-
-import com.google.android.gms.appindexing.AppIndex;
-import com.google.android.gms.common.api.GoogleApiClient;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -50,17 +42,10 @@ public class MainActivity extends Activity {
 
     private Face mFace = new Face();
 
-    /**
-     * ATTENTION: This was auto-generated to implement the App Indexing API.
-     * See https://g.co/AppIndexing/AndroidStudio for more information.
-     */
-    //private GoogleApiClient client;
-
     private static final int REQUEST_EXTERNAL_STORAGE = 1;
     private static String[] PERMISSIONS_STORAGE = {
             "android.permission.READ_EXTERNAL_STORAGE",
             "android.permission.WRITE_EXTERNAL_STORAGE" };
-
 
     public static void verifyStoragePermissions(Activity activity) {
         try {
@@ -135,7 +120,7 @@ public class MainActivity extends Activity {
                  byte[] imageDate = getPixelsRGBA(yourSelectedImage1);
 
                  long timeDetectFace = System.currentTimeMillis();   //检测起始时间
-                 int faceInfo[] = mFace.FaceDetect(imageDate, width, height, 4);
+                 int faceInfo[] = mFace.MaxFaceDetect(imageDate, width, height, 4); //只检测最大人脸，速度有较大提升
                  timeDetectFace = System.currentTimeMillis() - timeDetectFace; //人脸检测时间
 
                  if (faceInfo.length > 1) {       //检测到人脸
@@ -198,7 +183,7 @@ public class MainActivity extends Activity {
                 byte[] imageDate = getPixelsRGBA(yourSelectedImage2);
 
                 long timeDetectFace = System.currentTimeMillis();
-                int faceInfo[] = mFace.FaceDetect(imageDate, width, height, 4);
+                int faceInfo[] = mFace.MaxFaceDetect(imageDate, width, height, 4);  //只检测最大人脸
                 timeDetectFace = System.currentTimeMillis() - timeDetectFace;
 
                 if (faceInfo.length > 1) {

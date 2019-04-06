@@ -294,6 +294,7 @@ Java_com_mtcnn_1as_Face_SetTimeCount(JNIEnv *env, jobject instance, jint timeCou
 }
 }
 
+// 人脸检测
 extern "C"
 JNIEXPORT jdouble JNICALL
 Java_com_mtcnn_1as_Face_FaceRecognize(JNIEnv *env, jobject instance,
