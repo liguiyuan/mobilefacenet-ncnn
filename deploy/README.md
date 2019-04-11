@@ -24,9 +24,65 @@ python model_slim.py --model ../models/model-y1-test2/model,0
 
 - 下载ncnn并且编译，参考官网教程：[https://github.com/Tencent/ncnn/wiki/how-to-build#build-for-android](https://github.com/Tencent/ncnn/wiki/how-to-build#build-for-android)
 
+**安装vulkan**
+
+(optional) download and install vulkan-sdk from <https://vulkan.lunarg.com/sdk/home>
+
+```bash
+$ wget https://sdk.lunarg.com/sdk/download/1.1.92.1/linux/vulkansdk-linux-x86_64-1.1.92.1.tar.gz?Human=true -O vulkansdk-linux-x86_64-1.1.92.1.tar.gz
+$ tar -xf vulkansdk-linux-x86_64-1.1.92.1.tar.gz
+
+# setup env
+$ export VULKAN_SDK=`pwd`/1.1.92.1/x86_64
 ```
-cmake -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK/build/cmake/android.toolchain.cmake -DANDROID_ABI="armeabi-v7a" -DANDROID_ARM_NEON=ON -DANDROID_PLATFORM=android-14 ..
+
+**build armv7 library**
+
+```bash
+$ cd <ncnn-root-dir>
+$ mkdir -p build-android-armv7
+$ cd build-android-armv7
+
+$ cmake -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK/build/cmake/android.toolchain.cmake \
+    -DANDROID_ABI="armeabi-v7a" -DANDROID_ARM_NEON=ON \
+    -DANDROID_PLATFORM=android-14 ..
+
+# if you want to enable vulkan, platform api version >= android-24 is needed
+$ cmake -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK/build/cmake/android.toolchain.cmake \
+    -DANDROID_ABI="armeabi-v7a" -DANDROID_ARM_NEON=ON \
+    -DANDROID_PLATFORM=android-24 -DNCNN_VULKAN=ON ..
+
+$ make -j4
+$ make install
+
+pick build-android-armv7/install folder for further jni usage
 ```
+
+**build aarch64 library**
+
+```bash
+$ cd <ncnn-root-dir>
+$ mkdir -p build-android-aarch64
+$ cd build-android-aarch64
+
+$ cmake -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK/build/cmake/android.toolchain.cmake \
+    -DANDROID_ABI="arm64-v8a" \
+    -DANDROID_PLATFORM=android-21 ..
+
+# if you want to enable vulkan, platform api version >= android-24 is needed
+$ cmake -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK/build/cmake/android.toolchain.cmake \
+    -DANDROID_ABI="arm64-v8a" \
+    -DANDROID_PLATFORM=android-24 -DNCNN_VULKAN=ON ..
+
+$ make -j4
+$ make install
+
+pick build-android-aarch64/install folder for further jni usage
+```
+
+(armv7和armv8区别：[https://blog.csdn.net/u012505617/article/details/89205642](https://blog.csdn.net/u012505617/article/details/89205642) )
+
+
 
 - 使用mxnet2ncnn工具来转化模型：
 
