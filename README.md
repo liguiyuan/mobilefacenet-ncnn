@@ -70,32 +70,11 @@ gpu_device = -1
 
 安卓端的代码是在官网提供的mtcnn人脸检测的工程上进行修改，使用华为P9 Kirin 950，在多人脸检测上平均时间 在90～110ms 之间，第一次检测的时间比较长（可能第一次要加载到内存吧？），人脸检测效果还不错吧。
 
-```
-循环测试次数：10次
-线程数：4
+|              | Min     | Max      | Avg      |
+| ------------ | ------- | -------- | -------- |
+| 多人脸检测   | 90.65ms | 212.35ms | 106.73ms |
+| 最大人脸检测 | 31ms    | 194ms    | 69ms     |
+| 人脸识别     | 135ms   | 278ms    | 159ms    |
 
-I/ContentValues: 最小人脸：40
-D/MtcnnSo: 数据宽=816,高=612,通道=4
-D/MtcnnCpp: iter 1/10 cost: 212.347 ms
-D/MtcnnCpp: iter 2/10 cost: 116.149 ms
-D/MtcnnCpp: iter 3/10 cost: 92.372 ms
-D/MtcnnCpp: iter 4/10 cost: 92.525 ms
-D/MtcnnCpp: iter 5/10 cost: 91.499 ms
-D/MtcnnCpp: iter 6/10 cost: 93.328 ms
-D/MtcnnCpp: iter 7/10 cost: 92.209 ms
-D/MtcnnCpp: iter 8/10 cost: 92.987 ms
-D/MtcnnCpp: iter 9/10 cost: 93.262 ms
-D/MtcnnCpp: iter 10/10 cost: 90.649 ms
-    Time cost:Max 212.35ms,Min 90.65ms,Avg 106.73ms
-D/MtcnnSo: 检测到的人脸数目：13
-I/ContentValues: 检测所有人脸
-    人脸平均检测时间：107
-I/ContentValues: 图宽：816高：612 人脸数目：13
-```
-
-
-
-人脸识别，通过多次的优化后，速度有较大提高，第一次检测时间大概70到80ms之间。
-
-![](https://github.com/liguiyuan/mobilefacenet-ncnn/blob/master/docs/face_recognize.jpg)
+编译好的apk 文件在tools文件夹，可以在自己是手机上进行测试。
 
