@@ -321,6 +321,6 @@ Java_com_mtcnn_1as_Face_FaceRecognize(JNIEnv *env, jobject instance,
 
     env->ReleaseByteArrayElements(faceDate1_, faceDate1, 0);
     env->ReleaseByteArrayElements(faceDate2_, faceDate2, 0);
-    similar = calculSimilar(feature1, feature2);
+    similar = calculSimilar2(feature1, feature2);
     return similar;
 }

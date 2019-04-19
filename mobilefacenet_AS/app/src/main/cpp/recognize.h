@@ -37,5 +37,6 @@ namespace Face {
     };
 
     double calculSimilar(std::vector<float>& v1, std::vector<float>& v2);
+    double calculSimilar2(std::vector<float>& v1, std::vector<float>& v2);
 }
 #endif //MOBILEFACENET_AS_RECOGNIZE_H

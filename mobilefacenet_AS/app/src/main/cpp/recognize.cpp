@@ -240,6 +240,7 @@ namespace Face {
         return out;
     }
 
+    // Distance based on cosine similarity
     double calculSimilar(std::vector<float>& v1, std::vector<float>& v2)
     {
         if(v1.size() != v2.size()||!v1.size())
@@ -251,6 +252,20 @@ namespace Face {
             mod1 += v1[i] * v1[i];
             mod2 += v2[i] * v2[i];
         }
-        return ret / sqrt(mod1) / sqrt(mod2) ;
+        return ret / (sqrt(mod1) * sqrt(mod2));
+    }
+
+    // Euclidian distance
+    double calculSimilar2(std::vector<float>& v1, std::vector<float>& v2)
+    {
+        if(v1.size() != v2.size()||!v1.size())
+            return 0;
+        double dist = 0.0, diff = 0.0;
+        for (std::vector<double>::size_type i = 0; i != v1.size(); ++i)
+        {
+            diff = v1[i] - v2[i];
+            dist += (diff * diff);
+        }
+        return sqrt(dist);
     }
 }
