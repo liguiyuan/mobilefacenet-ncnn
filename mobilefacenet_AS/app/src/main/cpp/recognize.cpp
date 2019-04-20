@@ -33,6 +33,18 @@ namespace Face {
         {
             feature_out[j] = out[j];
         }
+        normalize(feature_out);     // feature normalize(l2)
+    }
+
+    void Recognize::normalize(std::vector<float> &feature) {
+        float sum = 0;
+        for (auto it = feature.begin(); it != feature.end(); it++) {
+            sum += (float)*it * (float)*it;
+        }
+        sum = sqrt(sum);
+        for (auto it = feature.begin(); it != feature.end(); it++) {
+            *it /= sum;
+        }
     }
 
     void Recognize::start(ncnn::Mat& ncnn_img, std::vector<float>&feature128) {
@@ -240,32 +252,27 @@ namespace Face {
         return out;
     }
 
-    // Distance based on cosine similarity
-    double calculSimilar(std::vector<float>& v1, std::vector<float>& v2)
+    double calculSimilar(std::vector<float>& v1, std::vector<float>& v2, int distance_metric)
     {
         if(v1.size() != v2.size()||!v1.size())
             return 0;
-        double ret = 0.0, mod1 = 0.0, mod2 = 0.0;
-        for (std::vector<double>::size_type i = 0; i != v1.size(); ++i)
-        {
-            ret += v1[i] * v2[i];
-            mod1 += v1[i] * v1[i];
-            mod2 += v2[i] * v2[i];
-        }
-        return ret / (sqrt(mod1) * sqrt(mod2));
-    }
+        double ret = 0.0, mod1 = 0.0, mod2 = 0.0, dist = 0.0, diff = 0.0;
 
-    // Euclidian distance
-    double calculSimilar2(std::vector<float>& v1, std::vector<float>& v2)
-    {
-        if(v1.size() != v2.size()||!v1.size())
-            return 0;
-        double dist = 0.0, diff = 0.0;
-        for (std::vector<double>::size_type i = 0; i != v1.size(); ++i)
-        {
-            diff = v1[i] - v2[i];
-            dist += (diff * diff);
+        if (distance_metric == 0) {         // Euclidian distance
+            for (std::vector<double>::size_type i = 0; i != v1.size(); ++i) {
+                diff = v1[i] - v2[i];
+                dist += (diff * diff);
+            }
+            dist = sqrt(dist);
         }
-        return sqrt(dist);
+        else {                              // Distance based on cosine similarity
+            for (std::vector<double>::size_type i = 0; i != v1.size(); ++i) {
+                ret += v1[i] * v2[i];
+                mod1 += v1[i] * v1[i];
+                mod2 += v2[i] * v2[i];
+            }
+            dist = ret / (sqrt(mod1) * sqrt(mod2));
+        }
+        return dist;
     }
 }

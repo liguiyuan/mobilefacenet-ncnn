@@ -39,7 +39,7 @@ public class MainActivity extends Activity {
     private int minFaceSize = 40;
     private int testTimeCount = 1;
     private int threadsNumber = 2;
-    private double threshold = 10.2;            // 人脸欧氏距离的阈值
+    private double threshold = 1.12;            // 人脸欧氏距离的阈值
 
     private Face mFace = new Face();
 
@@ -238,7 +238,7 @@ public class MainActivity extends Activity {
                 double similar = mFace.FaceRecognize(faceDate1,faceImage1.getWidth(),faceImage1.getHeight(),
                         faceDate2,faceImage2.getWidth(),faceImage2.getHeight());
                 timeRecognizeFace = System.currentTimeMillis() - timeRecognizeFace;
-                if (similar < threshold ) {      // 这里阈值我设置为10.2
+                if (similar <= threshold ) {      // 这里阈值设置
                     cmpResult.setText("欧氏距离: " + similar + " 同一人脸\n" + "识别+对比时间: " + timeRecognizeFace);
                 } else {
                     cmpResult.setText("欧氏距离: " + similar + " 不同人脸\n" + "识别+对比时间: " + timeRecognizeFace);
