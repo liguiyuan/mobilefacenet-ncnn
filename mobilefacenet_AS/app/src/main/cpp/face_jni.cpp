@@ -294,33 +294,43 @@ Java_com_mtcnn_1as_Face_SetTimeCount(JNIEnv *env, jobject instance, jint timeCou
 }
 }
 
-// 人脸检测
+
+// 人脸识别
 extern "C"
 JNIEXPORT jdouble JNICALL
 Java_com_mtcnn_1as_Face_FaceRecognize(JNIEnv *env, jobject instance,
-                                       jbyteArray faceDate1_, jint w1, jint h1,
-                                       jbyteArray faceDate2_, jint w2, jint h2) {
+                                      jbyteArray faceDate1_, jint w1, jint h1, jintArray landmarks1,
+                                      jbyteArray faceDate2_, jint w2, jint h2, jintArray landmarks2) {
+    double similar = 0;
+
     jbyte *faceDate1 = env->GetByteArrayElements(faceDate1_, NULL);
     jbyte *faceDate2 = env->GetByteArrayElements(faceDate2_, NULL);
 
-    // TODO
-    double similar = 0;
     unsigned char *faceImageCharDate1 = (unsigned char *) faceDate1;
     unsigned char *faceImageCharDate2 = (unsigned char *) faceDate2;
 
-    //没进行对齐操作，且以下对图像缩放的操作方法对结果影响较大。可改进空间很大，有能力的自己改改
-    ncnn::Mat ncnn_img1 = ncnn::Mat::from_pixels_resize(faceImageCharDate1,
-                                                        ncnn::Mat::PIXEL_RGBA2RGB, w1, h1, 112,
-                                                        112);
-    ncnn::Mat ncnn_img2 = ncnn::Mat::from_pixels_resize(faceImageCharDate2,
-                                                        ncnn::Mat::PIXEL_RGBA2RGB, w2, h2, 112,
-                                                        112);
+    jint *mtcnn_landmarks1 = env->GetIntArrayElements(landmarks1, NULL);
+    jint *mtcnn_landmarks2 = env->GetIntArrayElements(landmarks2, NULL);
+
+    int *mtcnnLandmarks1 = (int *)mtcnn_landmarks1;
+    int *mtcnnLandmarks2 = (int *)mtcnn_landmarks2;
+
+    ncnn::Mat ncnn_img1 = ncnn::Mat::from_pixels(faceImageCharDate1, ncnn::Mat::PIXEL_RGBA2RGB, w1, h1);
+    ncnn::Mat ncnn_img2 = ncnn::Mat::from_pixels(faceImageCharDate2, ncnn::Mat::PIXEL_RGBA2RGB, w2, h2);
+
+    //人脸对齐
+    ncnn::Mat det1 = mRecognize->preprocess(ncnn_img1, mtcnnLandmarks1);
+    ncnn::Mat det2 = mRecognize->preprocess(ncnn_img2, mtcnnLandmarks2);
+
     std::vector<float> feature1, feature2;
-    mRecognize->start(ncnn_img1, feature1);
-    mRecognize->start(ncnn_img2, feature2);
+    mRecognize->start(det1, feature1);
+    mRecognize->start(det2, feature2);
 
     env->ReleaseByteArrayElements(faceDate1_, faceDate1, 0);
     env->ReleaseByteArrayElements(faceDate2_, faceDate2, 0);
-    similar = calculSimilar(feature1, feature2, 0);
+    env->ReleaseIntArrayElements(landmarks1, mtcnn_landmarks1, 0);
+    env->ReleaseIntArrayElements(landmarks2, mtcnn_landmarks2, 0);
+
+    similar = calculSimilar(feature1, feature2, 1);
     return similar;
 }

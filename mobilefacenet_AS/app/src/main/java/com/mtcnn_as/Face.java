@@ -26,7 +26,7 @@ public class Face {
     public native boolean SetTimeCount(int timeCount);
 
     //人脸识别
-    public native double FaceRecognize(byte[] faceDate1,int w1,int h1,byte[] faceDate2,int w2,int h2);
+    public native double FaceRecognize(byte[] faceDate1,int w1,int h1, int[] landmarks1, byte[] faceDate2,int w2,int h2, int[] landmarks2);
 
     static {
         System.loadLibrary("Face");

@@ -52,7 +52,7 @@ namespace Face {
         feature128 = feature_out;
     }
 
-    void getAffineMatrix(float* src_5pts, const float* dst_5pts, float* M)
+    void Recognize::getAffineMatrix(float* src_5pts, const float* dst_5pts, float* M)
     {
         float src[10], dst[10];
         memcpy(src, src_5pts, sizeof(float)*10);
@@ -163,7 +163,7 @@ namespace Face {
         M[5] = pts0[1] + ptmp[1] - scale*(-ptmp[0]*_a + ptmp[1]*_b);
     }
 
-    void warpAffineMatrix(ncnn::Mat src, ncnn::Mat &dst, float *M, int dst_w, int dst_h)
+    void Recognize::warpAffineMatrix(ncnn::Mat src, ncnn::Mat &dst, float *M, int dst_w, int dst_h)
     {
         int src_w = src.w;
         int src_h = src.h;
@@ -227,7 +227,7 @@ namespace Face {
         delete[] dst_u;
     }
 
-    ncnn::Mat preprocess(ncnn::Mat img, FaceInfo info) {
+    ncnn::Mat Recognize::preprocess(ncnn::Mat img, int *info) {
         int image_w = 112; //96 or 112
         int image_h = 112;
 
@@ -239,10 +239,8 @@ namespace Face {
                 dst[i] += 8.0;
 
         float src[10];
-        for (int i = 0; i < 5; i++)
-        {
-            src[i] = info.landmark[2 * i];
-            src[i + 5] = info.landmark[2 * i + 1];
+        for (int i = 0; i < 10; i++) {
+            src[i] = info[i];
         }
 
         float M[6];

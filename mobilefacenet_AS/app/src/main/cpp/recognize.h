@@ -9,16 +9,6 @@
 #include <algorithm>
 
 namespace Face {
-
-    typedef struct FaceInfo {
-        float score;
-        int x[2];
-        int y[2];
-        float area;
-        float regreCoord[4];
-        int landmark[10];
-    } FaceInfo;
-
     class Recognize {
     public:
         Recognize(const std::string &model_path);
@@ -27,7 +17,7 @@ namespace Face {
         void SetThreadNum(int threadNum);
         void getAffineMatrix(float* src_5pts, const float* dst_5pts, float* M);
         void warpAffineMatrix(ncnn::Mat src, ncnn::Mat &dst, float *M, int dst_w, int dst_h);
-        ncnn::Mat preprocess(ncnn::Mat img, FaceInfo info);
+        ncnn::Mat preprocess(ncnn::Mat img, int *info);
     private:
         void RecogNet(ncnn::Mat& img_);
         void normalize(std::vector<float> &feature);

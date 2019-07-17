@@ -33,13 +33,16 @@ public class MainActivity extends Activity {
     private ImageView imageView1, imageView2;
     private Bitmap yourSelectedImage1 = null, yourSelectedImage2 = null;
     private Bitmap faceImage1 = null, faceImage2 = null;
-    TextView faceInfo1, faceInfo2, cmpResult;   //显示face 检测的结果和compare的结果
+    TextView faceInfo1, faceInfo2, cmpResult;       //显示face 检测的结果和compare的结果
+    private byte[] imageDate1, imageDate2;
+    private  int mtcnn_landmarks1[] = new int[10];  //存放mtcnn人脸关键点
+    private  int mtcnn_landmarks2[] = new int[10];
 
     // 初始参数设置，可以按需修改
     private int minFaceSize = 40;
     private int testTimeCount = 1;
     private int threadsNumber = 2;
-    private double threshold = 1.12;            // 人脸欧氏距离的阈值
+    private double threshold = 0.5;            // 人脸余弦距离的阈值
 
     private Face mFace = new Face();
 
@@ -118,10 +121,10 @@ public class MainActivity extends Activity {
                  faceImage1 = null;
                  int width = yourSelectedImage1.getWidth();
                  int height = yourSelectedImage1.getHeight();
-                 byte[] imageDate = getPixelsRGBA(yourSelectedImage1);
+                 imageDate1 = getPixelsRGBA(yourSelectedImage1);
 
                  long timeDetectFace = System.currentTimeMillis();   //检测起始时间
-                 int faceInfo[] = mFace.MaxFaceDetect(imageDate, width, height, 4); //只检测最大人脸，速度有较大提升
+                 int faceInfo[] = mFace.MaxFaceDetect(imageDate1, width, height, 4); //只检测最大人脸，速度有较大提升
                  timeDetectFace = System.currentTimeMillis() - timeDetectFace; //人脸检测时间
 
                  if (faceInfo.length > 1) {       //检测到人脸
@@ -149,6 +152,11 @@ public class MainActivity extends Activity {
                          faceInfo[8+14*i],faceInfo[13+14*i],
                          faceInfo[9+14*i],faceInfo[14+14*i]}, paint);//画多个点
                      }
+
+                     for (int i = 0; i < 10; i++) {
+                         mtcnn_landmarks1[i] = faceInfo[5+i];
+                     }
+
                      imageView1.setImageBitmap(drawBitmap);
                      faceImage1 = Bitmap.createBitmap(yourSelectedImage1, faceInfo[1], faceInfo[2], faceInfo[3] - faceInfo[1], faceInfo[4] - faceInfo[2]);
                  } else {     //没有人脸
@@ -181,10 +189,10 @@ public class MainActivity extends Activity {
                 faceImage2 = null;
                 int width = yourSelectedImage2.getWidth();
                 int height = yourSelectedImage2.getHeight();
-                byte[] imageDate = getPixelsRGBA(yourSelectedImage2);
+                imageDate2 = getPixelsRGBA(yourSelectedImage2);
 
                 long timeDetectFace = System.currentTimeMillis();
-                int faceInfo[] = mFace.MaxFaceDetect(imageDate, width, height, 4);  //只检测最大人脸
+                int faceInfo[] = mFace.MaxFaceDetect(imageDate2, width, height, 4);  //只检测最大人脸
                 timeDetectFace = System.currentTimeMillis() - timeDetectFace;
 
                 if (faceInfo.length > 1) {
@@ -213,6 +221,10 @@ public class MainActivity extends Activity {
                         faceInfo[8+14*i],faceInfo[13+14*i],
                         faceInfo[9+14*i],faceInfo[14+14*i]}, paint);//画多个点
                     }
+                    for (int i = 0; i < 10; i++) {
+                        mtcnn_landmarks2[i] = faceInfo[5+i];
+                    }
+
                     imageView2.setImageBitmap(drawBitmap);
                     faceImage2 = Bitmap.createBitmap(yourSelectedImage2, faceInfo[1], faceInfo[2], faceInfo[3] - faceInfo[1], faceInfo[4] - faceInfo[2]);
                 } else {
@@ -232,16 +244,17 @@ public class MainActivity extends Activity {
                     return;
                 }
 
-                byte[] faceDate1 = getPixelsRGBA(faceImage1);
-                byte[] faceDate2 = getPixelsRGBA(faceImage2);
                 long timeRecognizeFace = System.currentTimeMillis();
-                double similar = mFace.FaceRecognize(faceDate1,faceImage1.getWidth(),faceImage1.getHeight(),
-                        faceDate2,faceImage2.getWidth(),faceImage2.getHeight());
+
+                //人脸识别
+                double similar = mFace.FaceRecognize(imageDate1, yourSelectedImage1.getWidth(),yourSelectedImage1.getHeight(), mtcnn_landmarks1,
+                        imageDate2, yourSelectedImage2.getWidth(),yourSelectedImage2.getHeight(), mtcnn_landmarks2);
+
                 timeRecognizeFace = System.currentTimeMillis() - timeRecognizeFace;
-                if (similar <= threshold ) {      // 这里阈值设置
-                    cmpResult.setText("欧氏距离: " + similar + " 同一人脸\n" + "识别+对比时间: " + timeRecognizeFace);
+                if (similar >= threshold ) {      // 这里阈值设置
+                    cmpResult.setText("余弦距离: " + similar + " 同一人脸\n" + "识别+对比时间: " + timeRecognizeFace);
                 } else {
-                    cmpResult.setText("欧氏距离: " + similar + " 不同人脸\n" + "识别+对比时间: " + timeRecognizeFace);
+                    cmpResult.setText("余弦距离: " + similar + " 不同人脸\n" + "识别+对比时间: " + timeRecognizeFace);
                 }
             }
         });
